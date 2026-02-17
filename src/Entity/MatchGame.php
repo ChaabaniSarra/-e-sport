@@ -16,8 +16,8 @@ class MatchGame
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-    
-    #[ORM\Column(type: 'datetime')]
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
     #[Assert\NotNull(message: 'Veuillez renseigner la date du match.')]
     private ?\DateTimeInterface $dateMatch = null;
 
@@ -45,15 +45,6 @@ class MatchGame
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\NotNull(message: 'Veuillez sélectionner un tournoi.')]
     private ?Tournoi $Tournoi = null;
-#[Assert\Callback]
-    public function validateEquipesDifferentes(ExecutionContextInterface $context): void
-    {
-        if ($this->equipe1 !== null && $this->equipe2 !== null && $this->equipe1->getId() === $this->equipe2->getId()) {
-            $context->buildViolation('Les deux équipes ne peuvent pas être identiques. Veuillez choisir deux équipes différentes.')
-                ->atPath('equipe2')
-                ->addViolation();
-        }
-    }
 
     /**
      * @var Collection<int, Stream>
