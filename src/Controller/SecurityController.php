@@ -33,20 +33,8 @@ class SecurityController extends AbstractController
    
     private function redirectBasedOnUser($user): Response
     {
-      
-        
-        // Try getEmail() first
-        if (method_exists($user, 'getEmail')) {
-            $userEmail = $user->getEmail();
-        } 
-       
-        // If none exist, just redirect to homepage
-        else {
-            return $this->redirectToRoute('app_home');
-        }
-
-        
-        if ($userEmail === 'admin@gmail.com') {
+        // Check if user has ROLE_ADMIN
+        if (method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             return $this->redirectToRoute('admin_dashboard');
         }
 

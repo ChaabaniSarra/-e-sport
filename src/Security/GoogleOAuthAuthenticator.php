@@ -15,6 +15,7 @@ use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
 
 class GoogleOAuthAuthenticator extends AbstractAuthenticator implements AuthenticationEntryPointInterface
@@ -22,16 +23,19 @@ class GoogleOAuthAuthenticator extends AbstractAuthenticator implements Authenti
     private Google $googleProvider;
     private UserRepository $userRepository;
     private EntityManagerInterface $entityManager;
+    private UrlGeneratorInterface $urlGenerator;
 
     public function __construct(
         UserRepository $userRepository,
         EntityManagerInterface $entityManager,
+        UrlGeneratorInterface $urlGenerator,
         string $googleClientId,
         string $googleClientSecret,
         string $redirectUrl
     ) {
         $this->userRepository = $userRepository;
         $this->entityManager = $entityManager;
+        $this->urlGenerator = $urlGenerator;
 
         $this->googleProvider = new Google([
             'clientId' => $googleClientId,
@@ -100,8 +104,15 @@ class GoogleOAuthAuthenticator extends AbstractAuthenticator implements Authenti
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $user = $token->getUser();
+
+        // Check if user has ROLE_ADMIN
+        if (is_object($user) && method_exists($user, 'getRoles') && in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
+        }
+
         // Redirect to home after successful login
-        return new RedirectResponse('/');
+        return new RedirectResponse($this->urlGenerator->generate('app_home'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
