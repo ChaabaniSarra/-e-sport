@@ -1,7 +1,5 @@
 framework:
     mailer:
-        dsn: '%env(MAILER_DSN)%'
-        envelope:
-            sender: 'rajhiaziz2@gmail.com'
-        headers:
-            From: 'E-Sport Platform <rajhiaziz2@gmail.com>'
+        transports:
+            reset: '%env(MAILER_DSN_RESET)%'
+            team: '%env(MAILER_DSN_TEAM)%'

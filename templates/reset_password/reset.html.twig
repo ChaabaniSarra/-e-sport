@@ -145,7 +145,7 @@
             </div>
         {% endfor %}
 
-        {{ form_start(resetForm) }}
+        {{ form_start(resetForm, {'attr': {'novalidate': 'novalidate'}}) }}
 
         <div class="form-group-modern">
             <label class="form-label-modern">New Password</label>

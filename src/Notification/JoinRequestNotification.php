@@ -41,7 +41,9 @@ class JoinRequestNotification extends Notification implements EmailNotificationI
         $email = (new TemplatedEmail())
             ->from(new Address('rajhiaziz2@gmail.com', 'E-Sports Platform'))
             ->to($recipient->getEmail())
-            ->subject($this->getSubject())
+            ->subject($this->getSubject());
+        $email->getHeaders()->addTextHeader('X-Transport', 'team');
+        $email
             ->htmlTemplate('notification/join_request.html.twig')
             ->context([
                 'requesterName' => $this->requesterName,
