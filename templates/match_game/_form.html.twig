@@ -1,0 +1,74 @@
+{{ form_start(form, {'attr': {'class': 'match-form'}}) }}
+
+{# Section Tournoi #}
+<div class="form-section">
+    <h3 class="form-section-title"><i class="fas fa-trophy"></i> Tournoi</h3>
+    <div class="form-field full-width">
+        <label class="form-label">Tournoi</label>
+        {{ form_widget(form.Tournoi, {'attr': {'class': 'form-input form-select'}}) }}
+        {{ form_errors(form.Tournoi) }}
+    </div>
+</div>
+
+{# Section Équipes #}
+<div class="form-section">
+    <h3 class="form-section-title"><i class="fas fa-users"></i> Équipes</h3>
+    <div class="form-grid-2">
+        <div class="form-field">
+            <label class="form-label">Équipe 1</label>
+            {{ form_widget(form.equipe1, {'attr': {'class': 'form-input form-select'}}) }}
+            {{ form_errors(form.equipe1) }}
+        </div>
+        <div class="form-field">
+            <label class="form-label">Équipe 2</label>
+            {{ form_widget(form.equipe2, {'attr': {'class': 'form-input form-select'}}) }}
+            {{ form_errors(form.equipe2) }}
+        </div>
+    </div>
+</div>
+
+{# Section Date & Statut #}
+<div class="form-section">
+    <h3 class="form-section-title"><i class="fas fa-calendar-alt"></i> Date et statut</h3>
+    <div class="form-grid-2">
+        <div class="form-field">
+            <label class="form-label">Date et heure du match</label>
+            {{ form_widget(form.dateMatch, {'attr': {'class': 'form-input'}}) }}
+            {{ form_errors(form.dateMatch) }}
+        </div>
+        <div class="form-field">
+            <label class="form-label">Statut</label>
+            {{ form_widget(form.statut, {'attr': {'class': 'form-input form-select'}}) }}
+            {{ form_errors(form.statut) }}
+        </div>
+    </div>
+</div>
+
+{# Section Scores #}
+<div class="form-section">
+    <h3 class="form-section-title"><i class="fas fa-futbol"></i> Scores</h3>
+    <p class="form-hint">Laissez 0 si le match n'a pas encore été joué.</p>
+    <div class="form-grid-2">
+        <div class="form-field">
+            <label class="form-label">Score équipe 1</label>
+            {{ form_widget(form.scoreTeam1, {'attr': {'class': 'form-input', 'min': 0, 'placeholder': '0'}}) }}
+            {{ form_errors(form.scoreTeam1) }}
+        </div>
+        <div class="form-field">
+            <label class="form-label">Score équipe 2</label>
+            {{ form_widget(form.scoreTeam2, {'attr': {'class': 'form-input', 'min': 0, 'placeholder': '0'}}) }}
+            {{ form_errors(form.scoreTeam2) }}
+        </div>
+    </div>
+</div>
+
+<div class="form-actions">
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save"></i> {{ button_label|default('Enregistrer') }}
+    </button>
+    <a href="{{ path('app_match_game_index2') }}" class="btn btn-secondary">
+        <i class="fas fa-times"></i> Annuler
+    </a>
+</div>
+
+{{ form_end(form) }}

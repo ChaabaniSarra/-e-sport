@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="zxx">
 <head>
@@ -19,6 +18,7 @@
 <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}">
 <link rel="stylesheet" href="{{ asset('css/slick.css') }}">
 <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+<link rel="stylesheet" href="{{ asset('styles/app.css') }}">
 
 <!-- Google fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,13 +28,26 @@
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" />
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
 
-<link href="{{ asset('lib/lightbox/css/lightbox.min.css') }}" rel="stylesheet">
-<link href="{{ asset('lib/owlcarousel/assets/owl.carousel.min.css') }}" rel="stylesheet">
+<link href="{{ asset('css/nice-select.css') }}" rel="stylesheet">
+<link href="{{ asset('css/magnific-popup.css') }}" rel="stylesheet">
+<link href="{{ asset('css/riot-stats.css') }}" rel="stylesheet">
 
+{% block importmap %}{% endblock %}
 
 </head>
 
 <body>
+
+<!-- Flash Messages -->
+{% for label, messages in app.flashes %}
+    {% set alertClass = label == 'error' ? 'danger' : label %}
+    <div class="alert alert-{{ alertClass }} alert-dismissible fade show" role="alert" style="margin-top: 80px; margin-left: 20px; margin-right: 20px;">
+        {% for message in messages %}
+            <div>{{ message }}</div>
+        {% endfor %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endfor %}
 
 <!-- ===== NAVBAR ===== -->
 
@@ -62,31 +75,95 @@
 <a class="nav-link" href="{{ path('app_home') }}">Home</a>
 </li>
 
-<li class="nav-item">
-<a class="nav-link" href="#">fighter</a>
-</li>
+
 
 <li class="nav-item">
-<a class="nav-link" href="{{ path('app_team') }}">team</a>
+<a class="nav-link" href="{{ path('app_jeu_index') }}">Jeux</a>
+</li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="teamDropdown"
+       role="button" data-toggle="dropdown" aria-haspopup="true"
+       aria-expanded="false">
+       Team
+    </a>
+    <div class="dropdown-menu" aria-labelledby="teamDropdown">
+        <a class="dropdown-item" href="{{ path('app_equipe_index') }}">Team Hub</a>
+
+        {% if app.user %}
+        <a class="dropdown-item" href="{{ path('app_my_teams') }}">My Teams</a>
+        {% endif %}
+    </div>
+</li>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="tournoiDropdown"
+       role="button" data-toggle="dropdown" aria-haspopup="true"
+       aria-expanded="false">
+       Tournoi
+    </a>
+    <div class="dropdown-menu dropdown-menu-large" aria-labelledby="tournoiDropdown">
+        <a class="dropdown-item" href="{{ path('app_tournoi_index') }}">
+            <i class="fas fa-trophy"></i> Tous les Tournois
+        </a>
+        <a class="dropdown-item stats-btn" href="{{ path('app_jeu_stats_page') }}">
+            <i class="fas fa-chart-bar"></i> Stats
+        </a>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-stats-container" id="jeu-stats-dropdown">
+            <div class="loading-stats">
+                <i class="fas fa-spinner fa-spin"></i> Chargement des statistiques...
+            </div>
+        </div>
+    </div>
 </li>
  <li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="{{ path('app_blog') }}" id="navbarDropdown"
+    <a class="nav-link dropdown-toggle" href="" id="navbarDropdown"
        role="button" data-toggle="dropdown" aria-haspopup="true"
        aria-expanded="false">
        Blog
     </a>
     <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-        <a class="dropdown-item" href="{{ path('app_blog') }}">Blog</a>
-        <a class="dropdown-item" href="{{ path('app_single_blog') }}">Single blog</a>
+        <a class="dropdown-item" href="{{ path('app_blog_user_index') }}">Blog</a>
+        <a class="dropdown-item" href="">Single blog</a>
     </div>
 </li>
-
+<li class="nav-item ms-2">
+                                <a class="nav-link live-link" href="{{ path('app_stream_index') }}">
+                                    <span class="live-dot me-1"></span>
+                                    LIVE
+                                </a>
+                            </li>
 <li class="nav-item">
-<a class="nav-link" href="{{ path('app_product') }}">Products</a>
+<a class="nav-link" href="{{ path('app_product_index2') }}">Products</a>
 </li>
 
 <li class="nav-item">
-<a class="nav-link" href="{{ path('app_contact') }}">Contact</a>
+<a class="nav-link" href="{{ path('app_stats_hub') }}">
+    <i class="fas fa-chart-line"></i> Stats
+</a>
+</li>
+
+
+<li class="nav-item">
+<a class="nav-link" href="/{{app.user ? 'logout':'login'}}">{{app.user ? 'logout':'login'}}</a>
+</li>
+<li class="nav-item">
+    <a class="nav-link position-relative" href="{{ path('app_cart_index') }}">
+        <i class="fas fa-shopping-cart"></i>
+
+        <!-- Compteur du panier -->
+        <span id="cart-count"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            0
+        </span>
+    </a>
+</li>
+<li class="nav-item">
+    {% if app.user %}
+        <a class="nav-link" href="{{ path('app_profile') }}">
+            <i class="bi bi-person-circle" style="font-size: 1.3rem;"></i>
+        </a>
+    {% endif %}
 </li>
 
 </ul>
@@ -201,17 +278,100 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 <script src="{{ asset('js/jquery.magnific-popup.js') }}"></script>
 <script src="{{ asset('js/owl.carousel.min.js') }}"></script>
 <script src="{{ asset('js/slick.min.js') }}"></script>
+<script src="{{ asset('js/jquery.nice-select.min.js') }}"></script>
+<script src="{{ asset('js/waypoints.min.js') }}"></script>
+<script src="{{ asset('js/jquery.easing.min.js') }}"></script>
+<script src="{{ asset('js/masonry.pkgd.min.js') }}"></script>
+<script src="{{ asset('js/jquery.ajaxchimp.min.js') }}"></script>
+<script src="{{ asset('js/jquery.counterup.min.js') }}"></script>
 <script src="{{ asset('js/custom.js') }}"></script>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="{{ asset('lib/easing/easing.min.js') }}"></script>
-<script src="{{ asset('lib/waypoints/waypoints.min.js') }}"></script>
-<script src="{{ asset('lib/lightbox/js/lightbox.min.js') }}"></script>
-<script src="{{ asset('lib/owlcarousel/owl.carousel.min.js') }}"></script>
-
 <script src="{{ asset('jss/main.js') }}"></script>
+<script>
+function loadCartCount() {
+    fetch("{{ path('app_cart_data') }}")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("cart-count").innerText = data.totalItems;
+        });
+}
+
+document.addEventListener("DOMContentLoaded", loadCartCount);
+</script>
+
+<!-- Stats Dropdown Styles -->
+<style>
+    .dropdown-menu-large {
+        min-width: 400px;
+        max-width: 900px;
+    }
+    
+    .dropdown-stats-container {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    
+    .loading-stats {
+        text-align: center;
+        padding: 20px;
+        color: #667eea;
+    }
+    
+    .dropdown-item {
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .dropdown-item:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .dropdown-item i {
+        margin-right: 8px;
+    }
+    
+    .dropdown-item.stats-btn {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        font-weight: 600;
+        border-radius: 8px;
+        margin: 5px 10px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    
+    .dropdown-item.stats-btn:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        transform: scale(1.02);
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+    }
+</style>
+
+<!-- Load Stats on Dropdown Open -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tournoiDropdown = document.getElementById('tournoiDropdown');
+    const statsContainer = document.getElementById('jeu-stats-dropdown');
+    let statsLoaded = false;
+    
+    if (tournoiDropdown) {
+        tournoiDropdown.addEventListener('click', function(e) {
+            if (!statsLoaded) {
+                // Charger les stats via AJAX
+                fetch('{{ path('app_jeu_stats_dropdown') }}')
+                    .then(response => response.text())
+                    .then(html => {
+                        statsContainer.innerHTML = html;
+                        statsLoaded = true;
+                    })
+                    .catch(error => {
+                        statsContainer.innerHTML = '<div class="loading-stats" style="color: #ef4444;">❌ Erreur de chargement</div>';
+                    });
+            }
+        });
+    }
+});
+</script>
 
 </body>
-
+Error 404 (Not Found)!!1

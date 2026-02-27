@@ -1,0 +1,196 @@
+{% extends 'base.html.twig' %}
+{% block title %}Team Dashboard{% endblock %}
+
+{% block importmap %}{{ importmap('app') }}{% endblock %}
+
+{% block body %}
+<div class="team-dashboard">
+
+    <!-- HEADER -->
+    <section class="team-header">
+        <div style="display:flex;align-items:center;gap:16px;">
+            {% if team.logo %}
+                <img src="{{ asset('uploads/teams/' ~ team.logo) }}" alt="{{ team.nom }}" style="width:72px;height:72px;border-radius:8px;object-fit:cover;">
+            {% else %}
+                <img src="{{ asset('img/logo.png') }}" alt="{{ team.nom }}" style="width:72px;height:72px;border-radius:8px;object-fit:cover;">
+            {% endif %}
+            <div>
+                <h1 style="display:flex;align-items:center;gap:12px;">
+                    {{ team.nom }}
+                    {% if teamRank is defined and teamRank %}
+                        <span style="font-size:0.5em;opacity:0.6;font-weight:400;">#{{ teamRank.rang }}</span>
+                    {% endif %}
+                </h1>
+                <span class="role {{ membership.role }}">
+                    {{ membership.role }}
+                </span>
+            </div>
+        </div>
+
+        <div class="team-actions">
+            {% if membership.role == 'LEADER' %}
+                <a href="{{ path('app_equipe_membres', {id: team.id}) }}">Membres</a>
+                <a href="{{ path('app_equipe_edit', {id: team.id}) }}">Settings</a>
+            {% elseif membership.role == 'MEMBER' %}
+                <form method="post" action="{{ path('app_equipe_leave', {id: team.id}) }}" onsubmit="return confirm('Are you sure you want to leave this team?');" style="display:inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ team.id) }}">
+                    <button type="submit" class="btn-dashboard-action">Leave Team</button>
+                </form>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="stats-section">
+        <h2 class="stats-section-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#statsGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <defs><linearGradient id="statsGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ec4899"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+                <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
+            </svg>
+            Team Statistics
+        </h2>
+
+        <!-- Performance Cards -->
+        <div class="stats-perf-grid" style="margin-bottom:24px;">
+            {% if teamRank is defined and teamRank %}
+            <div class="stats-card stats-card--rank">
+                <div class="stats-card-icon rank-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="stats-card-body">
+                    <span class="stats-card-value">#{{ teamRank.rang }}</span>
+                    <span class="stats-card-label">Global Rank</span>
+                </div>
+                <div class="stats-card-accent rank-accent"></div>
+            </div>
+            <div class="stats-card stats-card--ppm">
+                <div class="stats-card-icon ppm-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>
+                <div class="stats-card-body">
+                    <span class="stats-card-value">{{ teamRank.ppm }}</span>
+                    <span class="stats-card-label">Pts / Match</span>
+                </div>
+                <div class="stats-card-accent ppm-accent"></div>
+            </div>
+            {% endif %}
+            <div class="stats-card stats-card--members">
+                <div class="stats-card-icon members-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="stats-card-body">
+                    <span class="stats-card-value">{{ team.members|length }}</span>
+                    <span class="stats-card-label">Members</span>
+                </div>
+                <div class="stats-card-accent members-accent"></div>
+            </div>
+            <div class="stats-card stats-card--matches">
+                <div class="stats-card-icon matches-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                </div>
+                <div class="stats-card-body">
+                    <span class="stats-card-value">{{ totalMatches }}</span>
+                    <span class="stats-card-label">Total Matches</span>
+                </div>
+                <div class="stats-card-accent matches-accent"></div>
+            </div>
+            <div class="stats-card stats-card--diff {{ goalDifference > 0 ? 'diff-positive' : (goalDifference < 0 ? 'diff-negative' : 'diff-neutral') }}">
+                <div class="stats-card-icon diff-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        {% if goalDifference > 0 %}
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                        {% elseif goalDifference < 0 %}
+                            <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>
+                        {% else %}
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        {% endif %}
+                    </svg>
+                </div>
+                <div class="stats-card-body">
+                    <span class="stats-card-value">{{ goalDifference > 0 ? '+' : '' }}{{ goalDifference }}</span>
+                    <span class="stats-card-label">Goal Diff</span>
+                </div>
+                <div class="stats-card-accent {{ goalDifference > 0 ? 'rank-accent' : (goalDifference < 0 ? 'matches-accent' : 'members-accent') }}"></div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;height:320px;">
+                {{ render_chart(resultsChart) }}
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:24px;height:320px;">
+                {{ render_chart(goalsChart) }}
+            </div>
+        </div>
+    </section>
+
+    <!-- PENDING JOIN REQUESTS (Owner only) -->
+    {% if membership.role == 'LEADER' and pendingRequests is defined and pendingRequests|length > 0 %}
+    <section class="team-requests" style="margin-top:30px;">
+        <h2 style="display:flex;align-items:center;gap:10px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Demandes en attente
+            <span style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-size:0.8rem;font-weight:800;padding:3px 10px;border-radius:999px;">{{ pendingRequests|length }}</span>
+        </h2>
+
+        <div class="members-grid" style="margin-top:16px;">
+            {% for req in pendingRequests %}
+                <div class="member-card" style="border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.05);padding:16px;border-radius:14px;display:flex;align-items:center;gap:14px;">
+                    <div class="avatar" style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:1.1rem;">
+                        {{ req.user.nom|first|upper }}
+                    </div>
+                    <div style="flex:1;">
+                        <p style="font-weight:700;margin:0;">{{ req.user.nom ?: req.user.userIdentifier }}</p>
+                        <p style="font-size:0.8rem;opacity:0.6;margin:4px 0 0;">{{ req.createdAt|date('d/m/Y H:i') }}</p>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <form method="post" action="{{ path('app_equipe_handle_join_request', {id: team.id, requestId: req.id, action: 'accept'}) }}">
+                            <button type="submit" style="border:none;padding:8px 16px;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;box-shadow:0 4px 12px rgba(34,197,94,0.3);transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                ✓ Accepter
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('app_equipe_handle_join_request', {id: team.id, requestId: req.id, action: 'reject'}) }}">
+                            <button type="submit" style="border:1px solid rgba(239,68,68,0.4);padding:8px 16px;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;background:rgba(239,68,68,0.1);color:#ef4444;transition:0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                ✕ Refuser
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- MEMBERS -->
+    <section class="team-members">
+        <h2>Members</h2>
+
+        <div class="members-grid">
+            {% for member in team.members %}
+                <div class="member-card">
+                    <div class="avatar"></div>
+                    <p>{{ member.nom ?: member.userIdentifier }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- TOURNAMENTS -->
+    <section class="team-tournaments">
+        <h2>Tournaments</h2>
+
+        <div class="tournament-card">
+            <h3>Spring Cup</h3>
+            <p>Status : Active</p>
+        </div>
+    </section>
+
+</div>
+
+{% include 'components/_chatbot_widget.html.twig' with {'equipe_id': team.id} %}
+
+{% endblock %}
+

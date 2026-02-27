@@ -1,0 +1,308 @@
+{% extends 'admin/dashboard.html.twig' %}
+
+{% block title %}Teams Management - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        z-index: -1;
+    }
+
+    .stat-card .number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card .label {
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .team-logo-mini {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        border: none;
+        background: rgba(148, 163, 184, 0.1);
+        color: #94a3b8;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .action-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        color: var(--primary);
+    }
+
+    .btn-extract {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        color: #fff;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .btn-extract:hover {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        color: #fff;
+    }
+    .btn-extract:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+    .btn-extract .spinner-border {
+        display: none;
+    }
+    .btn-extract.loading .spinner-border {
+        display: inline-block;
+    }
+    .btn-extract.loading .btn-icon {
+        display: none;
+    }
+
+    .game-select {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #e2e8f0;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        min-width: 180px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236366f1' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2rem;
+    }
+    .game-select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .game-select option {
+        background: #1e293b;
+        color: #e2e8f0;
+    }
+
+    .extract-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(30, 41, 59, 0.5);
+        padding: 0.4rem;
+        border-radius: 10px;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="page-title">Teams Management</h1>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            {# Sélection du jeu + bouton d'extraction #}
+            <form method="POST" action="{{ path('admin_equipe_extract') }}" class="d-inline" id="extractForm">
+                <input type="hidden" name="_token" value="{{ csrf_token('extract_teams') }}">
+                <div class="extract-group">
+                    <select name="jeu_id" class="game-select" id="gameSelect" required>
+                        <option value="" disabled selected>Choisir un jeu...</option>
+                        {% for jeu in jeux %}
+                            <option value="{{ jeu.id }}">{{ jeu.nom }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-extract" id="extractBtn">
+                        <span class="btn-icon"><i class="fas fa-cloud-download-alt"></i></span>
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Extraire Équipes
+                    </button>
+                </div>
+            </form>
+            <a href="{{ path('admin_equipe_new') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>New Team
+            </a>
+        </div>
+    </div>
+
+    {# Flash messages #}
+    {% for type in ['success', 'danger', 'warning', 'info'] %}
+        {% for message in app.flashes(type) %}
+            <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+                {% if type == 'success' %}<i class="fas fa-check-circle me-2"></i>
+                {% elseif type == 'danger' %}<i class="fas fa-exclamation-triangle me-2"></i>
+                {% elseif type == 'warning' %}<i class="fas fa-info-circle me-2"></i>
+                {% else %}<i class="fas fa-info-circle me-2"></i>{% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="number">{{ equipes|length }}</div>
+                <div class="label">Total Teams</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                {% set totalMembers = 0 %}
+                {% for equipe in equipes %}
+                    {% set totalMembers = totalMembers + equipe.members|length %}
+                {% endfor %}
+                <div class="number">{{ totalMembers }}</div>
+                <div class="label">Total Players</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                {% if equipes|length > 0 %}
+                    <div class="number">{{ (totalMembers / equipes|length)|round(1) }}</div>
+                {% else %}
+                    <div class="number">0</div>
+                {% endif %}
+                <div class="label">Avg Members/Team</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">All Teams</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Team Name</th>
+                        <th>Owner</th>
+                        <th>Members</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipe in equipes %}
+                    <tr>
+                        
+                        <td>
+                            <div class="fw-medium">{{ equipe.nom }}</div>
+                        </td>
+                        <td>
+                            <div>{{ equipe.owner.nom ?? 'N/A' }}</div>
+                            <small class="text-muted">{{ equipe.owner.email ?? '' }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{ equipe.members|length }} / {{ equipe.maxMembers }}</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ path('admin_equipe_show', {'id': equipe.id}) }}" 
+                                   class="action-btn view" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ path('admin_equipe_edit', {'id': equipe.id}) }}" 
+                                   class="action-btn edit" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" 
+                                      action="{{ path('admin_equipe_delete', {'id': equipe.id}) }}" 
+                                      class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this team?')">          
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ equipe.id) }}">
+                                    <button type="submit" class="action-btn delete" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="mb-4">
+                                <i class="fas fa-users fa-3x text-muted"></i>
+                            </div>
+                            <h5 class="text-muted mb-3">No teams found</h5>
+                            <a href="{{ path('admin_equipe_new') }}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Create Team
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('extractForm');
+    var btn = document.getElementById('extractBtn');
+    var select = document.getElementById('gameSelect');
+    
+    if (form && btn && select) {
+        form.addEventListener('submit', function(e) {
+            if (!select.value) {
+                e.preventDefault();
+                alert('Veuillez sélectionner un jeu.');
+                return false;
+            }
+            // Show loading state AFTER form starts submitting
+            setTimeout(function() {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            }, 50);
+        });
+    }
+});
+</script>
+{% endblock %}

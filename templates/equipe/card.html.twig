@@ -1,0 +1,68 @@
+{# templates/equipe/card.html.twig #}
+
+<div class="team-card">
+
+    <!-- Glow background -->
+    <div class="team-glow"></div>
+
+    <!-- Header -->
+    <div class="team-header">
+        {% if rankingByTeamId is defined and equipe.id in rankingByTeamId|keys %}
+            <span class="team-number">#{{ rankingByTeamId[equipe.id].rang }}</span>
+        {% else %}
+            <span class="team-number">#{{ loop.index }}</span>
+        {% endif %}
+    </div>
+
+    <!-- Avatar -->
+    <div class="team-avatar">
+        {% if equipe.logo %}
+            <img src="{{ asset('uploads/teams/' ~ equipe.logo) }}" alt="{{ equipe.nom }}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+        {% else %}
+            <img src="{{ asset('img/logo.png') }}" alt="{{ equipe.nom }}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;">
+        {% endif %}
+    </div>
+
+    <!-- Name -->
+    <h2 class="team-name">{{ equipe.nom }}</h2>
+
+    <!-- Meta badge -->
+    <div class="team-meta">
+        <span class="team-badge">ESPORT TEAM</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="team-actions">
+
+        <button type="button"
+                class="btn btn-view"
+                onclick="openModal('modal-{{ equipe.id }}')">
+            <i class="fas fa-eye"></i>
+            View
+        </button>
+
+        {% if is_member|default(false) %}
+            <a href="{{ path('app_equipe_dashboard', {id: equipe.id}) }}"
+               class="btn btn-join">
+                <i class="fas fa-tachometer-alt"></i>
+                Mon équipe
+            </a>
+        {% elseif pendingTeamIds is defined and equipe.id in pendingTeamIds %}
+            <span class="btn" style="flex:1;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);cursor:default;">
+                <i class="fas fa-clock"></i>
+                ⏳ En attente
+            </span>
+        {% else %}
+            <a href="{{ path('app_equipe_join', {id: equipe.id}) }}"
+               class="btn btn-join">
+                <i class="fas fa-users"></i>
+                Join Team
+            </a>
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+
